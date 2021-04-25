@@ -1,0 +1,44 @@
+## NFL data analysis
+
+library(readr)
+library(tidyverse)
+library(dplyr)
+library(broom)
+install.packages("car")
+install.packages("psych")
+library(psych)
+
+NFLdf <- read_csv("2019_nfl_qb_data.csv")
+View(NFLdf)
+
+str(NFLdf)
+
+new_df <- NFLdf %>%
+  filter(games_started >= 5) %>%
+  mutate(win_percentage = wins / games_started * 100)
+
+
+ggplot(data = new_df, aes(x = passer_rating, y = win_percentage)) +
+  geom_point(colour = "dodgerblue") +
+  geom_smooth(method = "lm", colour = "magenta", se = FALSE) +
+  geom_hline(yintercept = 50, colour = "black", linetype = "dashed")
+
+with(new_df, cor(x = passer_rating, y = win_percentage))
+
+library(broom)
+fit <- lm(win_percentage ~ passer_rating, data = new_df)
+tidy(fit, conf.int = TRUE)
+
+summary(fit)
+
+car::durbinWatsonTest(fit)
+
+std_res <- rstandard(fit)
+points <- 1:length(std_res)
+
+ggplot(data = NULL, aes(x = points, y = std_res)) +
+  geom_point() +
+  ylim(c(-4,4)) +
+  geom_hline(yintercept = c(-3, 3), colour = "red", linetype = "dashed")
+
+describe(new_df)
